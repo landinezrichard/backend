@@ -9,6 +9,7 @@ let bodyParser = require("body-parser");
 let app = express();
 
 // Cargar ficheros rutas
+let article_routes = require("./routes/article");
 
 // Middlewares
 
@@ -18,19 +19,8 @@ app.use(bodyParser.json());
 
 // CORS
 
-// Añadir prefijos a rutas
-
-	// ruta o metodo de prueba para el API REST
-app.get("/probando", (req, res) => {
-	console.log("Hola mundo!!!");
-	return res.status(200).send(
-		{
-			curso: "Master Frameworks JS",
-			autor: "Víctor Robles",
-			url: "victorroblesweb.es"
-		}
-	);
-});
+// Añadir prefijos a rutas / Cargar Rutas
+app.use("/api", article_routes);
 
 // Exportar modulo (fichero actual)
 module.exports = app;
