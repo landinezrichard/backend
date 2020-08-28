@@ -8,7 +8,12 @@ let ArticleController = require("../controllers/article");
 let router = express.Router();
 
 // creamos las rutas
+
+// Rutas de Prueba
 router.post("/datos-curso", ArticleController.datosCurso);
 router.get("/test-de-controlador", ArticleController.test);
+
+// Rutas para artículos
+router.post("/save", ArticleController.save);
 
 module.exports = router;

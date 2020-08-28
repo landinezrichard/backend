@@ -4,7 +4,6 @@
 let express = require("express");
 let bodyParser = require("body-parser");
 
-
 // Ejecutar express (http)
 let app = express();
 
