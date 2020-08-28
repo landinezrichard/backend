@@ -36,6 +36,7 @@ let controller = {
 			validate_content = !validator.isEmpty(params.content);
 		}catch(err){
 			return res.status(200).send({
+				status: "error",
 				message: "Faltan datos por enviar !!!"
 			});
 		}
@@ -44,17 +45,32 @@ let controller = {
 		if( validate_title && validate_content){
 			
 			// Crear el objeto (articulo) a guardar
+			let article = new Article();
 
 			// Asignar valores
+			article.title = params.title;
+			article.content = params.content;
+			article.image = null;
 
 			// Guardar el articulo
+			article.save( (err, articleStored) => {
+				if(err || !articleStored){
+					return res.status(404).send({
+						status: "error",
+						message: "El articulo no se ha guardado !!!"
+					});
+				}
 
-			// Devolver Respuesta
-			return res.status(200).send({
-				article: params
+				// Devolver Respuesta
+				return res.status(200).send({
+					status: "success",
+					article: articleStored
+				});
+				
 			});
 		}else{
 			return res.status(200).send({
+				status: "error",
 				message: "Los datos no son válidos !!!"
 			});
 		}
