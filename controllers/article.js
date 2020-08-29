@@ -66,7 +66,7 @@ let controller = {
 					status: "success",
 					article: articleStored
 				});
-				
+
 			});
 		}else{
 			return res.status(200).send({
@@ -75,6 +75,32 @@ let controller = {
 			});
 		}
 
+	},
+
+	// Metodo para devolver todos los articulos
+	getArticles: (req, res) => {
+		// Busqueda de articulos con "find"
+		Article.find({}).sort("-_id").exec( (err, articles) => {
+			if(err){
+				return res.status(500).send({
+					status: "error",
+					message: "Error al devolver los artículos !!!"
+				});
+			}
+
+			if(!articles){
+				return res.status(404).send({
+					status: "error",
+					message: "No hay artículos para mostrar !!!"
+				});
+			}
+
+			return res.status(200).send({
+				status: "success",
+				articles
+			});
+
+		});
 	}
 }; // end controller
 

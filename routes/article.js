@@ -15,5 +15,6 @@ router.get("/test-de-controlador", ArticleController.test);
 
 // Rutas para artículos
 router.post("/save", ArticleController.save);
+router.get("/articles", ArticleController.getArticles);
 
 module.exports = router;
