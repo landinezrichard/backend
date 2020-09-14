@@ -107,7 +107,35 @@ let controller = {
 			});
 
 		});
+	},
+
+	//Metodo para devolver un articulo por "_id"
+	getArticle: (req, res) => {
+		// Tomar el "id" de la URL
+		let articleId = req.params.id;
+		// Comprobar que el "id" existe
+		if(!articleId || articleId == null || articleId == undefined){
+			return res.status(404).send({
+				status: "error",
+				message: "No existe el artículo !!!"
+			});
+		}
+		// Buscar el articulo
+		Article.findById(articleId, (err, article) => {
+			if(err || !article){
+				return res.status(404).send({
+					status: "error",
+					message: "No existe el artículo !!!"
+				});
+			}
+			// Devolver respuesta JSON
+			return res.status(200).send({
+				status: "success",
+				article
+			});
+		});
 	}
+
 }; // end controller
 
 module.exports = controller;
