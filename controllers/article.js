@@ -79,8 +79,14 @@ let controller = {
 
 	// Metodo para devolver todos los articulos
 	getArticles: (req, res) => {
+		let last = req.params.last;
+		let query = Article.find({});
+ 
+		if (last || last != undefined) {
+			query.limit(parseInt(last));
+		}
 		// Busqueda de articulos con "find"
-		Article.find({}).sort("-_id").exec( (err, articles) => {
+		query.sort("-_id").exec( (err, articles) => {
 			if(err){
 				return res.status(500).send({
 					status: "error",
