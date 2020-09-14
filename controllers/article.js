@@ -134,6 +134,58 @@ let controller = {
 				article
 			});
 		});
+	},
+
+	//Metodo para actualizar datos de un articulo
+	update: (req, res) => {
+		// Recoger el "id" del articulo por la URL
+		let articleId = req.params.id;
+
+		// Recoger los datos que llegan por PUT
+		let params = req.body;
+
+		// Validar datos
+		let validate_title, validate_content;
+
+		try {
+			validate_title = !validator.isEmpty(params.title);
+			validate_content = !validator.isEmpty(params.content);
+		} catch (err) {
+			return res.status(200).send({
+				status: "error",
+				message: "Faltan datos por enviar !!!"
+			});
+		}
+
+		if( validate_title && validate_content){
+			// Find and update
+			Article.findOneAndUpdate({_id: articleId}, params, {new: true}, (err, articleUpdated) => {
+				if(err){
+					return res.status(500).send({
+						status: "error",
+						message: "Error al actualizar !!!"
+					});
+				}
+
+				if(!articleUpdated){
+					return res.status(404).send({
+						status: "error",
+						message: "No existe el artículo !!!"
+					});
+				}
+
+				// Devolver respuesta
+				return res.status(200).send({
+					status: "success",
+					article: articleUpdated
+				});
+			});
+		}else{
+			return res.status(200).send({
+				status: "error",
+				message: "Los datos no son válidos !!!"
+			});
+		}
 	}
 
 }; // end controller
