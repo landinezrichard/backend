@@ -2,6 +2,9 @@
 
 let validator = require("validator");
 let Article = require("../models/article");
+let multipart = require("multiparty");
+let fs = require("fs");
+let path = require("path");
 
 let controller = {
 
@@ -212,6 +215,99 @@ let controller = {
 				article: articleRemoved
 			});
 		});
+	},
+
+	//Metodo para subir imagenes
+	upload: (req, res) => {
+		// Configurar modulo multiparty
+
+		// analizar(parse/parsing) la carga de un archivo
+		let form = new multipart.Form({ uploadDir: "./upload/articles" });
+		
+		form.parse(req, (err, fields, files) => {
+			// Recoger el fichero de la petición
+			let file_name = "Imagen no subida...";
+
+			if(err || files.file0[0].size == 0){
+				// borrar archivo basura que intenta guardar
+				if(fs.existsSync(files.file0[0].path)) {
+					fs.unlinkSync(files.file0[0].path);
+				}
+				return res.status(404).send({
+					status: "error",
+					message: file_name
+				});
+			}
+			// Conseguir nombre y extensión del archivo
+			let file_path = files.file0[0].path;
+			let file_split = file_path.split("\\");
+
+			// ADVERTENCIA * en Linux o MAC
+			// let file_split = file_path.split("/");
+
+			// Nombre del archivo
+			file_name = file_split[2];
+
+			// Extensión del fichero
+			let extension_split = file_name.split("\.");
+			let file_ext = extension_split[1].toLowerCase();
+
+			// Comprobar la extensión (solo imagenes), si no es valido, borrar fichero
+			if(file_ext != "png" && file_ext != "jpg" && file_ext != "jpeg" && file_ext != "gif"){
+				// borrar archivo subido
+				fs.unlink(file_path, (err) => {
+					return res.status(200).send({
+						status: "error",
+						message: "La extensión de la imagen no es válida !!!"
+					});
+				});
+			}else{
+				// Si todo es válido
+				// Sacar el "id" de la URL
+				let articleId = req.params.id;
+
+				// Borrar imagen antigua (si la hay)
+				Article.findById({_id: articleId}, (err, article) => {
+					if(err || !article){
+						return res.status(404).send({
+							status: 'error',
+							message: 'Error no hay articulo para actualizar'
+						});
+					}
+					if(article.image !== null){
+						let old_image = "upload\\articles\\" + article.image;
+						console.log("Borrando Imagen Antigua");
+						fs.unlink(old_image, (err) => {
+							if (err) {
+								return res.status(400).send({
+									status: 'error',
+									message: 'Error al borrar imagen antigua / fs unlink'
+								});
+							}
+						});
+					}
+					return;
+				});
+
+				// Buscar articulo, asignarle el nombre de la imagen y actualizarlo
+				Article.findOneAndUpdate({_id: articleId}, {image: file_name}, {new: true}, (err, articleUpdated) => {
+					if(err || !articleUpdated){
+						return res.status(500).send({
+							status: "error",
+							message: "Error al guardar la imagen del articulo !!!"
+						});
+					}
+
+					return res.status(200).send({
+						status: "success",
+						article: articleUpdated
+					});
+				});
+				
+			}
+
+		});
+
 	}
 
 }; // end controller
