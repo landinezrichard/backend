@@ -223,45 +223,56 @@ let controller = {
 
 		// analizar(parse/parsing) la carga de un archivo
 		let form = new multipart.Form({ uploadDir: "./upload/articles" });
-		
-		form.parse(req, (err, fields, files) => {
-			// Recoger el fichero de la petición
-			let file_name = "Imagen no subida...";
+		let uploadFile = {path: "", type: ""};
+		let supportMimeTypes = ['image/jpg', 'image/jpeg', 'image/png','image/gif'];
+		let errors = [];
 
-			if(err || files.file0[0].size == 0){
-				// borrar archivo basura que intenta guardar
-				if(fs.existsSync(files.file0[0].path)) {
-					fs.unlinkSync(files.file0[0].path);
-				}
+		form.on('error', (err) => {
+			console.log('error');
+			if(fs.existsSync(uploadFile.path)) {
+				fs.unlinkSync(uploadFile.path);
+				console.log('error');
+			}
+		});
+		
+		// Escucha eventos de archivo
+		form.on("file", (name,file) => {
+
+			// Ruta archivo
+			uploadFile.path = file.path;
+
+			// Verificamos que no se envie una petición sin archivo
+			if(file.size == 0){
+				errors.push("Error seleccione un archivo !!!");
 				return res.status(404).send({
 					status: "error",
-					message: file_name
+					message: "Error seleccione un archivo !!!"
 				});
 			}
 			// Conseguir nombre y extensión del archivo
-			let file_path = files.file0[0].path;
+			let file_path = file.path;
 			let file_split = file_path.split("\\");
-
-			// ADVERTENCIA * en Linux o MAC
-			// let file_split = file_path.split("/");
-
 			// Nombre del archivo
-			file_name = file_split[2];
+			let file_name = file_split[2];
 
-			// Extensión del fichero
-			let extension_split = file_name.split("\.");
-			let file_ext = extension_split[1].toLowerCase();
+			// Conseguir el tipo de archivo que se quiere subir (MIME_type)
+			uploadFile.type = file.headers['content-type'];
 
-			// Comprobar la extensión (solo imagenes), si no es valido, borrar fichero
-			if(file_ext != "png" && file_ext != "jpg" && file_ext != "jpeg" && file_ext != "gif"){
-				// borrar archivo subido
-				fs.unlink(file_path, (err) => {
-					return res.status(200).send({
-						status: "error",
-						message: "La extensión de la imagen no es válida !!!"
-					});
+			// Comprobar la extensión (solo imagenes)
+			if(supportMimeTypes.indexOf(uploadFile.type) == -1) {
+				errors.push("La extensión de la imagen no es válida !!!");
+				return res.status(200).send({
+					status: "error",
+					message: "La extensión de la imagen no es válida !!!"
 				});
-			}else{
+			}
+
+		});
+
+		// analizar(parse) the form
+		form.parse(req, (err, fields, files) => {
+			//files["file0"][0].path;
+			if(errors.length == 0) {
 				// Si todo es válido
 				// Sacar el "id" de la URL
 				let articleId = req.params.id;
@@ -271,12 +282,11 @@ let controller = {
 					if(err || !article){
 						return res.status(404).send({
 							status: 'error',
-							message: 'Error no hay articulo para actualizar'
+							message: 'Error no hay articulo !!!'
 						});
 					}
 					if(article.image !== null){
 						let old_image = "upload\\articles\\" + article.image;
-						console.log("Borrando Imagen Antigua");
 						fs.unlink(old_image, (err) => {
 							if (err) {
 								return res.status(400).send({
@@ -288,6 +298,13 @@ let controller = {
 					}
 					return;
 				});
+
+				console.log("PATH");
+				console.log(uploadFile.path);
+
+				let file_split = uploadFile.path.split("\\");
+				// Nombre de la imagen nueva
+				let file_name = file_split[2];
 
 				// Buscar articulo, asignarle el nombre de la imagen y actualizarlo
 				Article.findOneAndUpdate({_id: articleId}, {image: file_name}, {new: true}, (err, articleUpdated) => {
@@ -303,10 +320,20 @@ let controller = {
 						article: articleUpdated
 					});
 				});
-				
-			}
 
-		});
+				// res.send({
+				// 	status: 'ok',
+				// 	fields: fields,
+				// 	files: files
+				// });
+			}else{
+				// borrar archivo basura que intenta guardar
+				if(fs.existsSync(uploadFile.path)) {
+					fs.unlinkSync(uploadFile.path);
+				}
+				console.log(errors);
+			}
+		});		
 
 	}
 
