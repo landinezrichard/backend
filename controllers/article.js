@@ -335,6 +335,26 @@ let controller = {
 			}
 		});		
 
+	},
+
+	//Metodo para obtener imagen
+	getImage: (req, res) => {
+		//obtener el fichero que se pide por URL
+		let file = req.params.image;
+		let path_file = "./upload/articles/" + file;
+
+		// comprobar si el archivo existe
+		fs.access(path_file, fs.constants.F_OK, (err) => {
+			if (err) {
+				return res.status(404).send({
+					status: "error",
+					message: "La imagen no existe !!!"
+				});
+			} else {
+				//devolvemos el fichero, para incrustarlo en etiquetas de imagen
+				return res.sendFile(path.resolve(path_file));
+			}
+		});
 	}
 
 }; // end controller
