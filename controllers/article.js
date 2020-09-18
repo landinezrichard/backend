@@ -355,6 +355,41 @@ let controller = {
 				return res.sendFile(path.resolve(path_file));
 			}
 		});
+	},
+
+	//Metodo para buscar entre los articulos
+	search: (req, res) => {
+		// sacar el string a buscar
+		let searchString = req.params.search;
+
+		//find or
+		Article.find({
+			"$or": [
+				{"title": {"$regex": searchString, "$options": "i"}},
+				{"content": {"$regex": searchString, "$options": "i"}}
+			]
+		})
+		.sort([["date", "descending"]]) //ordenamos de manera descendente por la fecha
+		.exec( (err, articles)=> {
+			if(err){
+				return res.status(500).send({
+					status: "error",
+					message: "Error en la petición !!!"
+				});
+			}
+
+			if(!articles || articles.length <= 0){
+				return res.status(404).send({
+					status: "error",
+					message: "No hay articulos que coincidan con la busqueda !!!"
+				});
+			}
+
+			return res.status(200).send({
+				status: "success",
+				articles
+			});
+		});
 	}
 
 }; // end controller
